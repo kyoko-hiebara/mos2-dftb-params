@@ -1,0 +1,97 @@
+# mos2-dftb-params
+
+DFTB (Slater–Koster) parameter sets for **monolayer MoS₂ with S-vacancy and O-substitution
+defects**, built for NEGF quantum-transport calculations with
+[DFTB+](https://dftbplus.org) (libNEGF), together with the full parameterization
+pipeline used to generate them.
+
+The electronic structure is fitted against the **LAK meta-GGA**
+(Lebeda–Aschebrock–Kümmel, [PRL 133, 136402 (2024)](https://doi.org/10.1103/PhysRevLett.133.136402)),
+which delivers near-HSE06 band gaps at semilocal cost — the reference calculations
+were run with VASP 6.4.2 + libxc 7.1.2 (`METAGGA = LIBXC`, `LIBXC1 = MGGA_X_LAK`,
+`LIBXC2 = MGGA_C_LAK`) at the experimental in-plane lattice constant a = 3.16 Å.
+
+## Parameter sets (`skf/`)
+
+| Set | Contents | Intended use |
+|---|---|---|
+| `skf_v2` | Electronic part only, Mo & S (spd basis, 16-parameter optimum) | Band structure / NEGF on fixed geometries (`PolynomialRepulsive = SetForAll { Yes }`) |
+| `skf_v2rep` | v2 + CCS repulsive splines (Mo-S, S-S, Mo-Mo) | Relaxations / energetics (equilibrium a within +1.1 % of LAK) |
+| `skf_v2o` | v2 + provisional O/H pairs (rule-of-thumb confinement) | O-substitution defect studies |
+
+DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; H = "s" }`.
+
+## Accuracy (vs. LAK reference @ a = 3.16 Å, monolayer)
+
+| Quantity | This work | LAK reference |
+|---|---|---|
+| K–K direct gap | 1.933 eV | 1.914 eV |
+| Nature of gap | direct at K (VBM ordering K−Γ = +19 meV) | direct (+15 meV) |
+| Q–K conduction-valley splitting | 221 meV | 242 meV |
+| Weighted VB / CB RMS (band path Γ-M-K-Γ) | 0.28 / 0.29 eV | — |
+| V_S in-gap level (5×5 cell) | doubly degenerate, flat (8 meV), CBM − 0.80 eV | same character, CBM − 0.55 eV |
+| O_S in-gap level | **none** (electronically benign) | none |
+
+For comparison, the general-purpose PTBP baseline set gives a 1.39 eV gap on the
+same footing (≈12× larger combined band loss).
+
+Known limitations (work in progress):
+- V_S level is ~0.24 eV too deep; a multi-target optimization (band + defect level)
+  is included in `multi_target/` and closes this gap.
+- O/H pairs are provisional (confinement not yet optimized); the qualitative O_S
+  physics is already correct.
+- No spin-orbit coupling yet. The LAK+SOC reference K-point VB splitting is
+  150.2 meV (matches experiment); DFTB+ `SpinOrbit` constants can be calibrated
+  against it.
+
+## Pipeline overview
+
+```
+VASP + libxc (LAK reference)          hotcent (PBE, scalar-rel.)        DFTB+
+  bands @ a=3.16 (57-k path)  ──►  confinement/onsite optimization ──►  bands
+  E(a), thickness scan, S2 curve      (optuna TPE, 16 parameters)        defect levels
+  defect supercells (V_S, O_S)   ──►  CCS repulsive fit (ccs_fit)   ──►  transport-ready SKF
+```
+
+- `scripts/param/` — SK-table generation (`gen_skf.py`), band/loss evaluation
+  (`compare_bands.py`, `dftb_bands.py`), optuna driver (`optimize_confinement.py`),
+  repulsion fit (`run_ccs_fit.py`, `attach_and_validate.sh`), defect-level analysis.
+- `scripts/vasp/` — LAK reference workflows (band path with zero-weight k-points,
+  E(a) scans, defect supercells, SOC, snapshot generation).
+- `scripts/setup/` — environment bootstrap used on the compute server
+  (libxc with `DISABLE_FHC`, pylibxc, GPU build notes).
+- `multi_target/optimize_multi.py` — band + V_S-level simultaneous fit
+  (runs locally; ~19 s/trial on an M4 Max).
+- `reference/` — LAK band reference (`bands_lak.json`), V_S level target,
+  free-atom onsite/Hubbard values, CCS spline parameters.
+- `docs/` — project log, final status notes (Japanese), band-structure figures.
+
+Key methodological choices (see `docs/final_status_20260901.md` for details):
+- Fit at the **experimental lattice constant** — at the LAK equilibrium (3.22 Å) the
+  monolayer becomes indirect-gap, which would corrupt K-valley transport.
+- **S needs an spd basis**; with sp only, the Γ-point VBM (S-pz) rises above K.
+- Loss function includes direct-gap and Γ/K VBM-ordering penalties plus
+  band-edge-weighted k-points (K valley ×3, Q valley ×2).
+
+## Requirements
+
+- [hotcent](https://gitlab.com/mvdb/hotcent) ≥ 2.0.1 + pylibxc (libxc ≥ 5; PBE electronic part)
+- [DFTB+](https://github.com/dftbplus/dftbplus) ≥ 24.1 (25.1 used; note
+  `CalculateForces` → `PrintForces` rename in ParserVersion 14)
+- [CCS / ccs_fit](https://github.com/Teoroo-CMC/CCS) 0.22.x (needs numpy < 1.23 — use a
+  separate venv)
+- optuna, ASE, numpy/scipy
+- For regenerating references: VASP ≥ 6.3 compiled with `-DUSELIBXC` against
+  libxc ≥ 7.1.0 built with `--disable-fhc` / `-DDISABLE_FHC=ON` (LAK correlation
+  requires libxc ≥ 7.1.0). POTCARs are **not** redistributed here.
+
+## Citing the underlying methods
+
+LAK: Lebeda, Aschebrock, Kümmel, PRL 133, 136402 (2024) ・ hotcent:
+Van den Bossche, JCTC 20, 2538 (2024) ・ CCS: Kandy et al., JCTC 17 (2021) ・
+DFTB+: Hourahine et al., JPCA 129, 5373 (2025) ・ PTBP baseline:
+Cui, Reuter, Margraf, JCTC 20, 5276 (2024).
+
+## Status / license
+
+Research in progress (2026-09). License: TBD — contact the author before reuse.
