@@ -23,7 +23,26 @@ were run with VASP 6.4.2 + libxc 7.1.2 (`METAGGA = LIBXC`, `LIBXC1 = MGGA_X_LAK`
 | `skf_v2rep` | v2 + CCS repulsive splines | superseded by `skf_v3rep` |
 | `skf_v2o` | v2 + provisional O/H pairs (rule-of-thumb confinement) | O-substitution defect studies |
 
-DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; H = "s" }`.
+| **`skf_v3sb`** | **4-element contact set: Mo/S (v3) + O (v4o) + Sb (spd, PBE-fitted)** — all 16 pairs | **Sb/MoS₂ contact (semimetal electrode) transport** |
+
+DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; Sb = "d"; H = "s" }`.
+
+## Antimony (semimetal contact electrode)
+
+Sb is a leading contact metal for MoS₂ (semimetal electrodes à la Bi/Sb give
+ultralow contact resistance). Since Sb is a **semimetal, a PBE reference is
+physically sufficient** (no band-gap-underestimation issue), so the entire Sb
+parameterization was done locally: GPAW PBE reference for bulk Sb (A7,
+experimental structure) → hotcent spd basis (5s5p + 5d polarization,
+scalar-relativistic) → 8-parameter optuna fit with Fermi-window weighting.
+
+Accuracy vs. GPAW PBE (bulk A7 Sb, Fermi-aligned): **RMS 0.165 eV within
+E_F ± 2 eV** (0.22 eV over the full 5s5p valence + conduction window); the
+semimetal pocket structure at L and near Z is reproduced (see
+`docs/sb_bands_comparison.png`). Sb SOC (ξ_5p ≈ 0.6 eV) is *not* yet calibrated
+— add it via the same procedure as `soc/` before spin-resolved contact studies.
+
+![Sb bands](docs/sb_bands_comparison.png)
 
 ## Accuracy (vs. LAK reference @ a = 3.16 Å, monolayer)
 
