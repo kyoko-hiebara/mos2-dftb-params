@@ -16,6 +16,7 @@ were run with VASP 6.4.2 + libxc 7.1.2 (`METAGGA = LIBXC`, `LIBXC1 = MGGA_X_LAK`
 | Set | Contents | Intended use |
 |---|---|---|
 | **`skf_v3`** | Electronic part, Mo & S — **multi-target optimum (bands + V_S defect level)** | **Recommended** for defect/transport studies on fixed geometries |
+| **`skf_v3o`** | v3 Mo/S orbitals + O pairs regenerated with v3 confinement (O itself provisional) | **Recommended** for O-substitution studies |
 | `skf_v2` | Electronic part only, Mo & S (spd basis, band-only optimum) | Band structure / NEGF on fixed geometries (`PolynomialRepulsive = SetForAll { Yes }`) |
 | `skf_v2rep` | v2 + CCS repulsive splines (Mo-S, S-S, Mo-Mo) | Relaxations / energetics (equilibrium a within +1.1 % of LAK) |
 | `skf_v2o` | v2 + provisional O/H pairs (rule-of-thumb confinement) | O-substitution defect studies |
@@ -31,7 +32,12 @@ DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; H = "s" }`.
 | Q–K conduction-valley splitting | — | 221 meV | 242 meV |
 | Weighted VB / CB RMS (Γ-M-K-Γ) | 0.33 / 0.29 eV | 0.28 / 0.29 eV | — |
 | V_S in-gap level (5×5 cell) | **CBM − 0.69 eV** | CBM − 0.80 eV | CBM − 0.55 eV |
-| O_S in-gap level | — | **none** (benign) | none |
+| O_S in-gap level (`skf_v3o` / `skf_v2o`) | **none**, gap 1.78 eV | none, gap 1.82 eV | none, gap 1.83 eV |
+
+![V_S defect comparison](docs/vs_defect_comparison.png)
+*Left: folded bands of the V_S 5×5 supercell with `skf_v3` (red: flat in-gap states).
+Right: VBM-aligned level diagram across potentials — note that PTBP's seemingly
+reasonable depth sits inside a gap that is 0.4 eV too small.*
 
 For comparison, the general-purpose PTBP baseline set gives a 1.39 eV gap on the
 same footing (≈12× larger combined band loss).
