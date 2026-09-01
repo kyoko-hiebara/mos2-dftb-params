@@ -37,9 +37,23 @@ experimental structure) → hotcent spd basis (5s5p + 5d polarization,
 scalar-relativistic) → 8-parameter optuna fit with Fermi-window weighting.
 
 Accuracy vs. GPAW PBE (bulk A7 Sb, Fermi-aligned): **RMS 0.165 eV within
-E_F ± 2 eV** (0.22 eV over the full 5s5p valence + conduction window); the
-semimetal pocket structure at L and near Z is reproduced (see
-`docs/sb_bands_comparison.png`). Sb SOC (ξ_5p ≈ 0.6 eV) is *not* yet calibrated
+E_F ± 2 eV** (0.22 eV over the full 5s5p valence + conduction window).
+
+**Semimetallicity check** (full-BZ 16³ state-counting, `scripts/sb/sb_semimetal_check.py`):
+Sb is an *indirect-overlap* semimetal — every k-point has a direct gap
+(min 89 meV in PBE+SOC), so band-path plots look "gapped"; the overlap lives
+between the H-point hole pocket and the L-point electron pocket.
+
+| | GPAW PBE+SOC | DFTB skf_v3sb+SOC |
+|---|---|---|
+| band overlap | +244 meV (expt ~ +180) | +117 meV |
+| hole pocket | H point | symmetry-equivalent H point |
+| pocket size | ~0.3 % of BZ | ~0.4 % of BZ |
+
+The semimetal character (sign, pocket locations, tiny pockets) is reproduced;
+the overlap magnitude is ~half of the reference — consistent with the 0.165 eV
+band residual. Adding the overlap as an explicit fit target is the natural next
+refinement if carrier densities matter. Sb SOC (ξ_5p ≈ 0.6 eV) is *not* yet calibrated
 — add it via the same procedure as `soc/` before spin-resolved contact studies.
 
 ![Sb bands](docs/sb_bands_comparison.png)
