@@ -16,7 +16,8 @@ were run with VASP 6.4.2 + libxc 7.1.2 (`METAGGA = LIBXC`, `LIBXC1 = MGGA_X_LAK`
 | Set | Contents | Intended use |
 |---|---|---|
 | **`skf_v3`** | Electronic part, Mo & S — **multi-target optimum (bands + V_S defect level)** | **Recommended** for defect/transport studies on fixed geometries |
-| **`skf_v3o`** | v3 Mo/S orbitals + O pairs regenerated with v3 confinement (O itself provisional) | **Recommended** for O-substitution studies |
+| **`skf_v4o`** | v3 Mo/S + **optimized O** (confinement + onsite fitted to sub_O spectrum) | **Recommended** for O-substitution studies |
+| `skf_v3o` | v3 Mo/S + provisional O pairs | superseded by `skf_v4o` |
 | `skf_v2` | Electronic part only, Mo & S (spd basis, band-only optimum) | Band structure / NEGF on fixed geometries (`PolynomialRepulsive = SetForAll { Yes }`) |
 | **`skf_v3rep`** | v3 + CCS repulsive splines refit for v3 electronics | Relaxations / energetics (E(a) RMS 114 meV/cell) |
 | `skf_v2rep` | v2 + CCS repulsive splines | superseded by `skf_v3rep` |
@@ -33,7 +34,9 @@ DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; H = "s" }`.
 | Q–K conduction-valley splitting | — | 221 meV | 242 meV |
 | Weighted VB / CB RMS (Γ-M-K-Γ) | 0.33 / 0.29 eV | 0.28 / 0.29 eV | — |
 | V_S in-gap level (5×5 cell) | **CBM − 0.69 eV** | CBM − 0.80 eV | CBM − 0.55 eV |
-| O_S in-gap level (`skf_v3o` / `skf_v2o`) | **none**, gap 1.78 eV | none, gap 1.82 eV | none, gap 1.83 eV |
+| O_S in-gap level (`skf_v4o`) | **none**, gap 1.76 eV | none (v2o), gap 1.82 eV | none, gap 1.83 eV |
+| O 2s deep level in sub_O (`skf_v4o`) | VBM − 20.12 eV (err 5 meV) | — | VBM − 20.12 eV |
+| sub_O VB spectrum RMS (`skf_v4o`) | 0.40 eV (0.2p-driven; was 1.72 provisional) | — | — |
 
 ![Pristine band comparison](docs/pristine_bands_4way.png)
 *Pristine monolayer bands: LAK vs skf_v3 vs skf_v2 vs PTBP (right: band-edge zoom).*
@@ -50,8 +53,9 @@ Known limitations (work in progress):
 - `skf_v3` (600-trial multi-target fit) reduces the V_S level error from 0.24 to
   0.14 eV at a modest band-quality cost; further improvement likely requires new
   physics (Hubbard-U scaling, onsite corrections) rather than more trials.
-- O/H pairs are provisional (confinement not yet optimized); the qualitative O_S
-  physics is already correct.
+- O pairs are now optimized (`skf_v4o`): O 2s level matched to 5 meV, sub_O VB
+  spectrum RMS 1.72 -> 0.40 eV, gap-state-free character preserved. H pairs
+  remain provisional.
 - **Spin-orbit coupling: calibrated constants available in `soc/`** —
   K-point VB splitting 150.2 meV (= LAK+SOC reference); the unfitted CB
   splitting (2.8 meV) matches the reference independently.
