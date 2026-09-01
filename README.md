@@ -18,7 +18,8 @@ were run with VASP 6.4.2 + libxc 7.1.2 (`METAGGA = LIBXC`, `LIBXC1 = MGGA_X_LAK`
 | **`skf_v3`** | Electronic part, Mo & S — **multi-target optimum (bands + V_S defect level)** | **Recommended** for defect/transport studies on fixed geometries |
 | **`skf_v3o`** | v3 Mo/S orbitals + O pairs regenerated with v3 confinement (O itself provisional) | **Recommended** for O-substitution studies |
 | `skf_v2` | Electronic part only, Mo & S (spd basis, band-only optimum) | Band structure / NEGF on fixed geometries (`PolynomialRepulsive = SetForAll { Yes }`) |
-| `skf_v2rep` | v2 + CCS repulsive splines (Mo-S, S-S, Mo-Mo) | Relaxations / energetics (equilibrium a within +1.1 % of LAK) |
+| **`skf_v3rep`** | v3 + CCS repulsive splines refit for v3 electronics | Relaxations / energetics (E(a) RMS 114 meV/cell) |
+| `skf_v2rep` | v2 + CCS repulsive splines | superseded by `skf_v3rep` |
 | `skf_v2o` | v2 + provisional O/H pairs (rule-of-thumb confinement) | O-substitution defect studies |
 
 DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; H = "s" }`.
@@ -34,6 +35,9 @@ DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; H = "s" }`.
 | V_S in-gap level (5×5 cell) | **CBM − 0.69 eV** | CBM − 0.80 eV | CBM − 0.55 eV |
 | O_S in-gap level (`skf_v3o` / `skf_v2o`) | **none**, gap 1.78 eV | none, gap 1.82 eV | none, gap 1.83 eV |
 
+![Pristine band comparison](docs/pristine_bands_4way.png)
+*Pristine monolayer bands: LAK vs skf_v3 vs skf_v2 vs PTBP (right: band-edge zoom).*
+
 ![V_S defect comparison](docs/vs_defect_comparison.png)
 *Left: folded bands of the V_S 5×5 supercell with `skf_v3` (red: flat in-gap states).
 Right: VBM-aligned level diagram across potentials — note that PTBP's seemingly
@@ -48,9 +52,9 @@ Known limitations (work in progress):
   physics (Hubbard-U scaling, onsite corrections) rather than more trials.
 - O/H pairs are provisional (confinement not yet optimized); the qualitative O_S
   physics is already correct.
-- No spin-orbit coupling yet. The LAK+SOC reference K-point VB splitting is
-  150.2 meV (matches experiment); DFTB+ `SpinOrbit` constants can be calibrated
-  against it.
+- **Spin-orbit coupling: calibrated constants available in `soc/`** —
+  K-point VB splitting 150.2 meV (= LAK+SOC reference); the unfitted CB
+  splitting (2.8 meV) matches the reference independently.
 
 ## Pipeline overview
 
