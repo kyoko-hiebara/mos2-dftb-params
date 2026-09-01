@@ -15,7 +15,8 @@ were run with VASP 6.4.2 + libxc 7.1.2 (`METAGGA = LIBXC`, `LIBXC1 = MGGA_X_LAK`
 
 | Set | Contents | Intended use |
 |---|---|---|
-| `skf_v2` | Electronic part only, Mo & S (spd basis, 16-parameter optimum) | Band structure / NEGF on fixed geometries (`PolynomialRepulsive = SetForAll { Yes }`) |
+| **`skf_v3`** | Electronic part, Mo & S — **multi-target optimum (bands + V_S defect level)** | **Recommended** for defect/transport studies on fixed geometries |
+| `skf_v2` | Electronic part only, Mo & S (spd basis, band-only optimum) | Band structure / NEGF on fixed geometries (`PolynomialRepulsive = SetForAll { Yes }`) |
 | `skf_v2rep` | v2 + CCS repulsive splines (Mo-S, S-S, Mo-Mo) | Relaxations / energetics (equilibrium a within +1.1 % of LAK) |
 | `skf_v2o` | v2 + provisional O/H pairs (rule-of-thumb confinement) | O-substitution defect studies |
 
@@ -23,21 +24,22 @@ DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; H = "s" }`.
 
 ## Accuracy (vs. LAK reference @ a = 3.16 Å, monolayer)
 
-| Quantity | This work | LAK reference |
-|---|---|---|
-| K–K direct gap | 1.933 eV | 1.914 eV |
-| Nature of gap | direct at K (VBM ordering K−Γ = +19 meV) | direct (+15 meV) |
-| Q–K conduction-valley splitting | 221 meV | 242 meV |
-| Weighted VB / CB RMS (band path Γ-M-K-Γ) | 0.28 / 0.29 eV | — |
-| V_S in-gap level (5×5 cell) | doubly degenerate, flat (8 meV), CBM − 0.80 eV | same character, CBM − 0.55 eV |
-| O_S in-gap level | **none** (electronically benign) | none |
+| Quantity | `skf_v3` | `skf_v2` | LAK reference |
+|---|---|---|---|
+| K–K direct gap | 1.877 eV | 1.933 eV | 1.914 eV |
+| Nature of gap | direct at K (K−Γ = +14 meV) | direct (+19 meV) | direct (+15 meV) |
+| Q–K conduction-valley splitting | — | 221 meV | 242 meV |
+| Weighted VB / CB RMS (Γ-M-K-Γ) | 0.33 / 0.29 eV | 0.28 / 0.29 eV | — |
+| V_S in-gap level (5×5 cell) | **CBM − 0.69 eV** | CBM − 0.80 eV | CBM − 0.55 eV |
+| O_S in-gap level | — | **none** (benign) | none |
 
 For comparison, the general-purpose PTBP baseline set gives a 1.39 eV gap on the
 same footing (≈12× larger combined band loss).
 
 Known limitations (work in progress):
-- V_S level is ~0.24 eV too deep; a multi-target optimization (band + defect level)
-  is included in `multi_target/` and closes this gap.
+- `skf_v3` (600-trial multi-target fit) reduces the V_S level error from 0.24 to
+  0.14 eV at a modest band-quality cost; further improvement likely requires new
+  physics (Hubbard-U scaling, onsite corrections) rather than more trials.
 - O/H pairs are provisional (confinement not yet optimized); the qualitative O_S
   physics is already correct.
 - No spin-orbit coupling yet. The LAK+SOC reference K-point VB splitting is
