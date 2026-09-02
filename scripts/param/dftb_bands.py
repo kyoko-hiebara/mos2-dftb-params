@@ -20,12 +20,12 @@ from ase.io import write as ase_write
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bandpath_common import kpath_points  # noqa: E402
 
-DFTB = "/opt/dftbplus/bin/dftb+"
+DFTB = "/Users/crocus/uhuhu/MoS2_DFTB/sw_local/dftbplus-install/bin/dftb+"
 
 HSD_COMMON = """
 Hamiltonian = DFTB {{
   SCC = Yes
-  SCCTolerance = {scctol}
+{shell}  SCCTolerance = {scctol}
   MaxSCCIterations = {maxscc}
   Mixer = Broyden {{}}
   SlaterKosterFiles = Type2FileNames {{
@@ -48,6 +48,10 @@ ParserOptions {{ ParserVersion = 14 }}
 """
 
 
+def SHELL(args):
+    return "  ShellResolvedSCC = Yes\n" if getattr(args, "shell", False) else ""
+
+
 def make_geometry(a, workdir, thickness=3.13):
     atoms = mx2(formula="MoS2", kind="2H", a=a, thickness=thickness, vacuum=10.0)
     ase_write(os.path.join(workdir, "geo.gen"), atoms, format="gen")
@@ -57,7 +61,7 @@ def make_geometry(a, workdir, thickness=3.13):
 def run_dftb(workdir, hsd):
     with open(os.path.join(workdir, "dftb_in.hsd"), "w") as f:
         f.write(hsd)
-    env = dict(os.environ, OMP_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1")
+    env = dict(os.environ, OMP_NUM_THREADS="4", OPENBLAS_NUM_THREADS="1")
     r = subprocess.run([DFTB], cwd=workdir, capture_output=True, text=True,
                        timeout=1200, env=env)
     ok = "ERROR" not in r.stdout and r.returncode == 0
@@ -95,6 +99,9 @@ def main():
     ap.add_argument("--json", default=None)
     ap.add_argument("--thickness", type=float, default=3.13)
     ap.add_argument("--s-lmax", choices=["p", "d"], default="p", dest="slmax")
+    ap.add_argument("--shell-resolved", action="store_true", dest="shell")
+    ap.add_argument("--extra-kpts", default=None, dest="extra_kpts",
+                    help="JSON list of extra k-points appended after the path")
     args = ap.parse_args()
 
     os.makedirs(args.workdir, exist_ok=True)
@@ -106,7 +113,7 @@ def main():
     # 1) SCC
     kscc = ("  KPointsAndWeights = SupercellFolding {\n"
             "    12 0 0\n    0 12 0\n    0 0 1\n    0.5 0.5 0.0\n  }")
-    hsd1 = geoblock + HSD_COMMON.format(skf=skf, kblock=kscc, extra="", maxscc=200, scctol="1e-7", slmax=args.slmax)
+    hsd1 = geoblock + HSD_COMMON.format(skf=skf, kblock=kscc, extra="", maxscc=200, scctol="1e-7", slmax=args.slmax, shell=SHELL(args))
     ok, log = run_dftb(args.workdir, hsd1)
     if not ok:
         print("SCC FAILED", log[-1500:])
@@ -116,11 +123,13 @@ def main():
     if not os.path.exists(os.path.join(args.workdir, "charges.bin")):
         print("NO charges.bin AFTER SCC")
         sys.exit(1)
-    pts = kpath_points()
+    pts = np.array(kpath_points())
+    if args.extra_kpts:
+        pts = np.vstack([pts, np.array(json.load(open(args.extra_kpts)))])
     klines = "  KPointsAndWeights = {\n" + "\n".join(
         f"    {p[0]:.10f} {p[1]:.10f} {p[2]:.10f} 1.0" for p in pts) + "\n  }"
     extra = "  ReadInitialCharges = Yes"
-    hsd2 = geoblock + HSD_COMMON.format(skf=skf, kblock=klines, extra=extra, maxscc=1, scctol="1e8", slmax=args.slmax)
+    hsd2 = geoblock + HSD_COMMON.format(skf=skf, kblock=klines, extra=extra, maxscc=1, scctol="1e8", slmax=args.slmax, shell=SHELL(args))
     ok, log = run_dftb(args.workdir, hsd2)
     if not ok:
         print("BAND RUN FAILED", log[-1500:])

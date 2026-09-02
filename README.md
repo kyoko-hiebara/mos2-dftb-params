@@ -24,8 +24,45 @@ were run with VASP 6.4.2 + libxc 7.1.2 (`METAGGA = LIBXC`, `LIBXC1 = MGGA_X_LAK`
 | `skf_v2o` | v2 + provisional O/H pairs (rule-of-thumb confinement) | O-substitution defect studies |
 
 | **`skf_v3sb`** | **4-element contact set: Mo/S (v3) + O (v4o) + Sb (spd, PBE-fitted)** — all 16 pairs | **Sb/MoS₂ contact (semimetal electrode) transport** |
+| **`skf_v5`** | **4-element set, generation 5: vacuum-level-aligned Mo/S/O/Sb, SOC-in-loop Sb, band-edge-curvature + Q-valley + 12×12-mesh targets** | **Recommended electronic set for MoS₂ / O_S / Sb-contact transport on fixed geometries** |
+| **`skf_v5rep`** | v5 + CCS repulsion: Mo/S (rep-type, energies+forces; E(a) RMS 28 meV/cell, a_eq +0.09 %) and Sb–Sb / S–Sb (sw-type, PBE E(V) of bulk Sb and Sb₂S₃) | Relaxations of MoS₂ and Sb₂S₃ internal coordinates; bulk-Sb full relaxation only semi-quantitative (see docs) |
 
 DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; Sb = "d"; H = "s" }`.
+
+## Generation 5 (2026-09-02): alignment, curvature, SOC-in-loop — see `docs/session_20260902.md`
+
+Diagnosis of v3/v3sb showed three method-level gaps: (i) the absolute onsite levels were
+unconstrained (bulk-Sb E_F sat at −1.45 eV instead of ≈ −4.6 eV, i.e. 2 eV above the MoS₂ CBM),
+(ii) band-edge effective masses were 50–70 % too heavy and the Q valley 0.19 eV too high, and
+(iii) three parameters were pinned at their search bounds. v5 adds to the loss: vacuum-referenced
+alignment targets (GPAW PBE: MoS₂ IP 5.94 / EA 4.21 eV, Sb(111) work function 4.19 eV), K-point
+curvature and Q–K terms, the 12×12 IBZ mesh already contained in the LAK EIGENVAL, and for Sb the
+SOC-included path bands, the full-BZ 16³ state-counting overlap and the slab E_F.
+
+| Quantity | reference | v3 / v3sb | **v5** |
+|---|---|---|---|
+| K midgap rel. vacuum | −5.08 eV (PBE) | −4.41 | **−5.13** |
+| Q–K valley splitting | 0.242 eV | 0.433 | **0.278** |
+| m*(VB,K→M) / m*(CB,K→M) | −0.67 / 0.53 m_e | −1.15 / 0.78 | −1.11 / 0.91 (not improved) |
+| V_S level below CBM | 0.554 eV | 0.690 | 0.736 (worse; trade-off with curvature) |
+| O_S: O 2s level error / gap | — / 1.826 eV | 5 meV / 1.76 | 6 meV / 1.77 |
+| E(a) RMS / a_eq error (repulsion) | — | 114 meV, +1.1 % | **28 meV, +0.09 %** |
+| Sb: SOC path RMS (E_F ± 2 eV) | — | 0.327 eV | **0.286** |
+| Sb: band overlap (16³ mesh, SOC) | +244 meV | +117 | **+222** |
+| Sb(111) slab E_F | −4.19 eV (PBE) | −1.83 | **−4.15** |
+| Sb₂S₃ (unfitted check): gap / VB RMS | 1.29 eV (PBE) | — | 1.57 / 0.12 eV |
+| Sb(111)/MoS₂ 4×4 interface: E_F − CBM | — | meaningless | +0.01 eV (barrier-free n-contact) |
+
+SOC block for v5: `Mo [eV] = {0.0 0.036 0.0953}; S = {0.0 0.055 0.0}; O = {0.0 0.02 0.0}; Sb = {0.0 0.571 0.0}`
+(Mo 4d from the 150 meV K-splitting, Sb 5p from the Γ-point multiplet span).
+
+Known limitations of v5: masses and the V_S depth did not improve (a mass-weighted variant is being
+explored as `optm3`); the Sb alignment uses the PBE work function (experiment is ~0.4 eV larger — a
+single common shift of the Sb onsites in `Sb-Sb.skf` moves it); the sw-type Sb repulsion reproduces the
+E(V) scans (23–35 meV/cell) but underestimates the Peierls distortion in a full bulk-Sb relaxation
+(rhombohedral angle 59.7° vs 57.1°), so keep DFT geometries for the Sb electrode; no Mo–Sb repulsion.
+
+![v5 bands](docs/bands_v5_vs_lak.png)
 
 ## Antimony (semimetal contact electrode)
 

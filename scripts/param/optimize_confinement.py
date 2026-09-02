@@ -41,7 +41,8 @@ FREE = json.load(open(os.path.join(SCRIPTS, "free_atom_props.json")))
 def make_atom(el, p):
     spec = SPECS[el]
     s_wf = p.get("s_wf", 2.0)
-    wf_conf = {nl: PowerConfinement(r0=p["r_wf"][nl], s=s_wf)
+    s_shell = p.get("s_wf_shell", {})
+    wf_conf = {nl: PowerConfinement(r0=p["r_wf"][nl], s=s_shell.get(nl, s_wf))
                for nl in spec["valence"]}
     atom = AtomicDFT(el, xc=XC,
                      configuration=spec["configuration"],

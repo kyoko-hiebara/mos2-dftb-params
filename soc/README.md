@@ -22,3 +22,17 @@ Validation at K (monolayer, a = 3.16 Å): VB splitting 150.2 meV (= LAK+SOC
 reference, fitted), CB splitting 2.8 meV (reference 2.8 meV — independent check,
 not fitted). xi_Mo(4d) = 0.093 eV is consistent with the atomic value.
 Recalibrate with `soc_calibrate.py` if the electronic set changes.
+
+## Generation 5 (`skf_v5`, 2026-09-02)
+
+```
+SpinOrbit = {
+  Dual = Yes
+  Mo [eV] = {0.0 0.036 0.0953}   # recalibrated: K-point VB splitting 150.2 meV
+  S  [eV] = {0.0 0.055 0.0}
+  O  [eV] = {0.0 0.02 0.0}
+  Sb [eV] = {0.0 0.571 0.0}      # Γ-point 5p multiplet span 0.950 eV (scripts/sb/sb_gamma_span.py)
+}
+```
+Note: calibrating ξ_Sb by minimising the path RMS is not reliable (it drifts to the lower bound);
+use the Γ-span method. The Sb set was fitted *with* SOC (ξ = 0.57 eV) inside the loop.
