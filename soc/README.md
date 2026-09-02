@@ -36,3 +36,5 @@ SpinOrbit = {
 ```
 Note: calibrating ξ_Sb by minimising the path RMS is not reliable (it drifts to the lower bound);
 use the Γ-span method. The Sb set was fitted *with* SOC (ξ = 0.57 eV) inside the loop.
+
+For `skf_v5m` use `Mo [eV] = {0.0 0.036 0.1005}` (K-point VB splitting 150.2 meV); the other constants are unchanged.

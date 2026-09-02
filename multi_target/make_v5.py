@@ -75,7 +75,15 @@ def collect(mos2_study, sb_study, o_study="opto2"):
     pSb = {"r_dens": fs["Sb_rd"], "s_wf": fs["Sb_swf"],
            "r_wf": {"5s": fs["Sb_r5s"], "5p": fs["Sb_r5p"], "5d": fs["Sb_r5d"]}}
     new_mean = np.mean([fp["Mo_sh4d"], fp["Mo_sh5s"], fp["Mo_sh5p"], fp["S_sh3s"], fp["S_sh3p"]])
-    d_o = float(new_mean - V3_SHIFT_MEAN) if o_study.startswith("opto2") else 0.0
+    # O シフトの再アンカー: O をフィットした時の Mo/S ベースの平均シフトとの差
+    O_BASE = {"opto2": None, "opto3": "optm2", "opto4": "optm3c"}   # O フィット時の Mo/S ベース study
+    base = O_BASE.get(o_study.split(",")[0], None)
+    if base is None:
+        base_mean = V3_SHIFT_MEAN                      # opto2 は optm1 (v3) ベース
+    else:
+        fb, _ = best_params(base, "O-base")
+        base_mean = np.mean([fb["Mo_sh4d"], fb["Mo_sh5s"], fb["Mo_sh5p"], fb["S_sh3s"], fb["S_sh3p"]])
+    d_o = float(new_mean - base_mean)
     shifts = {"Mo": {"4d": fp["Mo_sh4d"], "5s": fp["Mo_sh5s"], "5p": fp["Mo_sh5p"]},
               "S": {"3s": fp["S_sh3s"], "3p": fp["S_sh3p"]},
               "O": {"2s": fo["O_sh2s"] + d_o, "2p": fo["O_sh2p"] + d_o},

@@ -26,6 +26,8 @@ were run with VASP 6.4.2 + libxc 7.1.2 (`METAGGA = LIBXC`, `LIBXC1 = MGGA_X_LAK`
 | **`skf_v3sb`** | **4-element contact set: Mo/S (v3) + O (v4o) + Sb (spd, PBE-fitted)** — all 16 pairs | **Sb/MoS₂ contact (semimetal electrode) transport** |
 | **`skf_v5`** | **4-element set, generation 5: vacuum-level-aligned Mo/S/O/Sb, SOC-in-loop Sb, band-edge-curvature + Q-valley + 12×12-mesh targets** | **Recommended electronic set for MoS₂ / O_S / Sb-contact transport on fixed geometries** |
 | **`skf_v5rep`** | v5 + CCS repulsion: Mo/S (rep-type, energies+forces; E(a) RMS 28 meV/cell, a_eq +0.09 %) and Sb–Sb / S–Sb (sw-type, PBE E(V) of bulk Sb and Sb₂S₃) | Relaxations of MoS₂ and Sb₂S₃ internal coordinates; bulk-Sb full relaxation only semi-quantitative (see docs) |
+| **`skf_v5m`** | **Generation 5, mass-weighted variant: same targets as v5 with 3× weight on band-edge curvature and a separate Mo 4d confinement exponent; O refit on this base** — m*(K) VB −0.73 / CB +0.62 m_e (LAK −0.67 / +0.53) | **Recommended for transport (band-edge masses, K/Q valleys)** |
+| **`skf_v5m_rep`** | v5m + repulsion: Mo/S sw-type with forces (E(a) RMS 7 meV/cell, relaxed a −0.16 %), Sb–Sb / S–Sb sw-type | MoS₂ relaxations; for S-containing non-MoS₂ structures prefer `skf_v5rep` |
 
 DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; Sb = "d"; H = "s" }`.
 
@@ -55,6 +57,23 @@ SOC-included path bands, the full-BZ 16³ state-counting overlap and the slab E_
 
 SOC block for v5: `Mo [eV] = {0.0 0.036 0.0953}; S = {0.0 0.055 0.0}; O = {0.0 0.02 0.0}; Sb = {0.0 0.571 0.0}`
 (Mo 4d from the 150 meV K-splitting, Sb 5p from the Γ-point multiplet span).
+
+### v5 vs v5m (mass-weighted variant)
+
+| Quantity | reference | v5 | **v5m** |
+|---|---|---|---|
+| m*(VB, K→M / K→Γ) | −0.67 / −0.55 m_e | −1.11 / −0.90 | **−0.73 / −0.69** |
+| m*(CB, K→M / K→Γ) | +0.53 / +0.48 m_e | +0.91 / +0.83 | **+0.62 / +0.60** |
+| K gap / VBM(K)−VBM(Γ) | 1.914 / +0.015 eV | 1.898 / +0.006 | 1.900 / +0.029 |
+| Q–K | 0.242 eV | 0.278 | 0.293 |
+| K midgap rel. vacuum | −5.075 eV | −5.126 | −5.118 |
+| V_S level below CBM | 0.554 eV | 0.736 | 0.734 |
+| O_S gap / O 2s error / VB RMS | 1.826 eV / — / — | 1.77 / 6 meV / 0.47 | 1.85 / 22 meV / 0.30 |
+| Mo/S repulsion: E(a) RMS, relaxed a, thickness | — | 28 meV, +0.10 %, −0.17 % | 7 meV, −0.16 %, +0.26 % |
+| Sb₂S₃ internal relaxation RMS displacement | — | 0.08 Å | 0.27 Å |
+| SOC ξ_Mo(4d) / ξ_Sb(5p) | — | 0.0953 / 0.571 eV | 0.1005 / 0.571 eV |
+
+![v5m bands](docs/bands_v5m_vs_lak.png)
 
 Known limitations of v5: masses and the V_S depth did not improve (a mass-weighted variant is being
 explored as `optm3`); the Sb alignment uses the PBE work function (experiment is ~0.4 eV larger — a
