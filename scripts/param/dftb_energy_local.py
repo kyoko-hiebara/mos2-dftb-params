@@ -47,6 +47,9 @@ Options {{ WriteResultsTag = Yes }}
 Analysis {{ PrintForces = Yes }}
 ParserOptions {{ ParserVersion = 14 }}
 """
+HSD = HSD.replace(
+    "  PolynomialRepulsive", (os.environ.get("DFTB_EXTRA_HSD", "").replace("{", "{{").replace("}", "}}") + "\n"
+                              if os.environ.get("DFTB_EXTRA_HSD") else "") + "  PolynomialRepulsive", 1)
 
 
 def kblock_for(atoms):

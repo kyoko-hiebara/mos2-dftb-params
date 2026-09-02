@@ -78,6 +78,9 @@ Analysis {{
 }}
 ParserOptions {{ ParserVersion = 14 }}
 """
+HSD = HSD.replace(
+    "  PolynomialRepulsive", (os.environ.get("DFTB_EXTRA_HSD", "").replace("{", "{{").replace("}", "}}") + "\n"
+                              if os.environ.get("DFTB_EXTRA_HSD") else "") + "  PolynomialRepulsive", 1)
 SOC = """  SpinOrbit = {
     Dual = Yes
     Mo [eV] = {0.0 0.036 0.0931}

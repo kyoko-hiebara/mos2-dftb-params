@@ -28,6 +28,8 @@ were run with VASP 6.4.2 + libxc 7.1.2 (`METAGGA = LIBXC`, `LIBXC1 = MGGA_X_LAK`
 | **`skf_v5rep`** | v5 + CCS repulsion: Mo/S (rep-type, energies+forces; E(a) RMS 28 meV/cell, a_eq +0.09 %) and Sb–Sb / S–Sb (sw-type, PBE E(V) of bulk Sb and Sb₂S₃) | Relaxations of MoS₂ and Sb₂S₃ internal coordinates; bulk-Sb full relaxation only semi-quantitative (see docs) |
 | **`skf_v5m`** | **Generation 5, mass-weighted variant: same targets as v5 with 3× weight on band-edge curvature and a separate Mo 4d confinement exponent; O refit on this base** — m*(K) VB −0.73 / CB +0.62 m_e (LAK −0.67 / +0.53) | **Recommended for transport (band-edge masses, K/Q valleys)** |
 | **`skf_v5m_rep`** | v5m + repulsion: Mo/S sw-type with forces (E(a) RMS 7 meV/cell, relaxed a −0.16 %), Sb–Sb / S–Sb sw-type | MoS₂ relaxations; for S-containing non-MoS₂ structures prefer `skf_v5rep` |
+| **`skf_v6`** / `skf_v6_rep` | Generation 6: v5-type targets + **repulsion-target monotonicity** term + fitted DFTB+U on Mo 4d (U = 0.030 Ha). Physically monotonic rep-type repulsion (relaxed a +0.27 %, thickness −0.26 %, Sb₂S₃ 0.11 Å); V_S 0.671 eV | Relaxations / energetics with a sound repulsion; **needs the `OrbitalPotential` block in `orbital_potential.hsd`** |
+| **`skf_v7`** / `skf_v7_rep` | Generation 7: V_S-weighted (+U = 0.088 Ha on Mo 4d) — **V_S level 0.587 eV (LAK 0.554)**, K gap 1.937 eV direct, Q–K 0.258 eV; masses −0.92 / +0.84 m_e | **Recommended for S-vacancy (defect) transport**; also a sound rep-type repulsion; **needs the `OrbitalPotential` block** |
 
 DFTB+ settings: `MaxAngularMomentum { Mo = "d"; S = "d"; O = "p"; Sb = "d"; H = "s" }`.
 
@@ -74,6 +76,38 @@ SOC block for v5: `Mo [eV] = {0.0 0.036 0.0953}; S = {0.0 0.055 0.0}; O = {0.0 0
 | SOC ξ_Mo(4d) / ξ_Sb(5p) | — | 0.0953 / 0.571 eV | 0.1005 / 0.571 eV |
 
 ![v5m bands](docs/bands_v5m_vs_lak.png)
+
+### Generations 6 and 7: DFTB+U for the vacancy level and a monotonic repulsion target
+
+Two method additions (see `docs/session_20260902.md`, 追記 2–3):
+1. **DFTB+U (FLL) on Mo 4d**, fitted as a parameter. A scan on v5m showed the V_S level moves linearly
+   with U (0.734 → 0.545 eV at U = 0.08 Ha) while the gap and the Γ/K ordering degrade unless refitted;
+   with a refit (optm6/optm6c, V_S weight ×2, relaxed band gate) U = 0.088 Ha brings V_S to 0.587 eV.
+2. **Monotonicity of the repulsion target** D(a) = E_LAK − E_elec (`multi_target/erep_shape.py`) added to
+   the loss. It separates the sets on which a rep-type (monotonic, convex) CCS spline can be fitted
+   (v3, v5, v6, v7) from those that cannot (v5m: sw-type only, weak transferability).
+
+| Quantity | reference | v5 | v5m | v6 | v7 |
+|---|---|---|---|---|---|
+| K gap / VBM(K)−VBM(Γ) | 1.914 / +0.015 eV | 1.898 / +0.006 | 1.900 / +0.029 | 1.850 / +0.041 | 1.937 / +0.053 |
+| Q–K | 0.242 eV | 0.278 | 0.293 | 0.257 | 0.258 |
+| m*(VB) K→M / K→Γ | −0.67 / −0.55 m_e | −1.11 / −0.90 | **−0.73 / −0.69** | −1.00 / −0.87 | −0.92 / −0.84 |
+| m*(CB) K→M / K→Γ | +0.53 / +0.48 m_e | +0.91 / +0.83 | **+0.62 / +0.60** | +0.90 / +0.83 | +0.84 / +0.80 |
+| V_S level below CBM | 0.554 eV | 0.736 | 0.734 | 0.671 | **0.587** |
+| Mo 4d U (FLL) | — | 0 | 0 | 0.030 Ha | 0.088 Ha |
+| D(a) monotonic → rep-type repulsion | — | yes | no | yes | yes |
+| Mo/S repulsion: E(a) RMS; relaxed a / thickness | — | 28 meV; +0.10 / −0.17 % | 7 meV (sw); −0.16 / +0.26 % | 56 meV; +0.27 / −0.26 % | 69 meV; +0.04 / −0.38 % |
+| Sb₂S₃ internal relaxation RMS | — | 0.08 Å | 0.27 Å | 0.11 Å | 0.12 Å |
+| O_S gap / O 2s error / VB RMS | 1.826 eV | 1.77 / 6 meV / 0.47 | 1.85 / 22 / 0.30 | 1.77 / 14 / 0.35 | 1.86 / 15 / 0.27 |
+| SOC ξ_Mo(4d) | — | 0.0953 | 0.1005 | 0.0885 | 0.0779 eV |
+
+**Use by purpose**: pristine-MoS₂ transport (band-edge masses, valleys) → `skf_v5m`; S-vacancy defect
+transport → `skf_v7`; relaxations and energetics → `skf_v6_rep` / `skf_v7_rep` (rep-type). Light masses,
+the V_S level and a monotonic repulsion could not be obtained in a single set — this is the current
+limit of the two-centre + onsite-shift + U model.
+
+`skf_v6` / `skf_v7` require, in addition to the SKF files, the block stored in `orbital_potential.hsd`
+inside `Hamiltonian = DFTB { }` (`OrbitalPotential { Functional = FLL; Mo { Shells = {3}; UJ = ... } }`).
 
 Known limitations of v5: masses and the V_S depth did not improve (a mass-weighted variant is being
 explored as `optm3`); the Sb alignment uses the PBE work function (experiment is ~0.4 eV larger — a

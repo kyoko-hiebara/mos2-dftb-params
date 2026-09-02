@@ -39,6 +39,9 @@ Hamiltonian = DFTB {{
 Options {{ WriteResultsTag = Yes }}
 ParserOptions {{ ParserVersion = 14 }}
 """
+HSD = HSD.replace(
+    "  PolynomialRepulsive", (os.environ.get("DFTB_EXTRA_HSD", "").replace("{", "{{").replace("}", "}}") + "\n"
+                              if os.environ.get("DFTB_EXTRA_HSD") else "") + "  PolynomialRepulsive", 1)
 W = "/private/tmp/claude-501/-Users-crocus-uhuhu-MoS2-DFTB/6416faee-14e1-48c8-9838-35c06f3e7813/scratchpad/relax_sb"
 skf = os.path.abspath(sys.argv[1])
 def run(name, atoms, latopt, k):

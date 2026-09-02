@@ -1,0 +1,7 @@
+  OrbitalPotential = {
+    Functional = FLL
+    Mo = {
+      Shells = {3}
+      UJ = 0.02978
+    }
+  }

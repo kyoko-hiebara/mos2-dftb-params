@@ -49,7 +49,9 @@ ParserOptions {{ ParserVersion = 14 }}
 
 
 def SHELL(args):
-    return "  ShellResolvedSCC = Yes\n" if getattr(args, "shell", False) else ""
+    out = "  ShellResolvedSCC = Yes\n" if getattr(args, "shell", False) else ""
+    x = getattr(args, "extra_hsd", "") or os.environ.get("DFTB_EXTRA_HSD", "")
+    return out + (x + "\n" if x else "")
 
 
 def make_geometry(a, workdir, thickness=3.13):
@@ -100,6 +102,8 @@ def main():
     ap.add_argument("--thickness", type=float, default=3.13)
     ap.add_argument("--s-lmax", choices=["p", "d"], default="p", dest="slmax")
     ap.add_argument("--shell-resolved", action="store_true", dest="shell")
+    ap.add_argument("--extra-hsd", default="", dest="extra_hsd",
+                    help="Hamiltonian ブロックに挿入する追加 HSD (例: OrbitalPotential)")
     ap.add_argument("--extra-kpts", default=None, dest="extra_kpts",
                     help="JSON list of extra k-points appended after the path")
     args = ap.parse_args()

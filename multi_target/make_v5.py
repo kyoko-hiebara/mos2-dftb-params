@@ -76,7 +76,7 @@ def collect(mos2_study, sb_study, o_study="opto2"):
            "r_wf": {"5s": fs["Sb_r5s"], "5p": fs["Sb_r5p"], "5d": fs["Sb_r5d"]}}
     new_mean = np.mean([fp["Mo_sh4d"], fp["Mo_sh5s"], fp["Mo_sh5p"], fp["S_sh3s"], fp["S_sh3p"]])
     # O シフトの再アンカー: O をフィットした時の Mo/S ベースの平均シフトとの差
-    O_BASE = {"opto2": None, "opto3": "optm2", "opto4": "optm3c"}   # O フィット時の Mo/S ベース study
+    O_BASE = {"opto2": None, "opto3": "optm2", "opto4": "optm3c", "opto5": "optm4c", "opto6": "optm6c"}   # O フィット時の Mo/S ベース study
     base = O_BASE.get(o_study.split(",")[0], None)
     if base is None:
         base_mean = V3_SHIFT_MEAN                      # opto2 は optm1 (v3) ベース
@@ -145,6 +145,9 @@ Hamiltonian = DFTB {{
 Options {{ WriteResultsTag = Yes }}
 ParserOptions {{ ParserVersion = 14 }}
 """
+SUBO_HSD = SUBO_HSD.replace(
+    "  PolynomialRepulsive", (os.environ.get("DFTB_EXTRA_HSD", "").replace("{", "{{").replace("}", "}}") + "\n"
+                              if os.environ.get("DFTB_EXTRA_HSD") else "") + "  PolynomialRepulsive", 1)
 
 
 def validate_subo(skf, wd):
